@@ -2,8 +2,7 @@
 extern crate lazy_static;
 use crate::config::CONFIG;
 use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
-use actix_web::{HttpResponse, Responder};
+use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use jsonwebtoken::{Algorithm, Validation};
 
@@ -12,10 +11,7 @@ mod config;
 mod errors;
 mod openid;
 mod state;
-
-async fn index() -> impl Responder {
-    HttpResponse::Ok().json(vec!["hello", "world"])
-}
+mod store;
 
 #[actix_rt::main]
 async fn main() -> Result<(), errors::Error> {
@@ -41,7 +37,9 @@ async fn main() -> Result<(), errors::Error> {
             })
             .wrap(HttpAuthentication::bearer(auth::obo))
             .wrap(HttpAuthentication::bearer(auth::validator))
-            .service(web::scope("/").route("", web::get().to(index)))
+            .service(store::list)
+            .service(store::dimensions)
+            .service(store::lines)
     })
     .bind(&CONFIG.host_addr)?
     .run()
