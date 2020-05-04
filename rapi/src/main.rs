@@ -5,17 +5,32 @@ use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use jsonwebtoken::{Algorithm, Validation};
+use tmq::Context;
 
 mod auth;
 mod config;
 mod errors;
+mod multiplexer;
 mod openid;
+mod slicer;
 mod state;
 mod store;
 
+pub mod oneseismic {
+    include!(concat!(env!("OUT_DIR"), "/oneseismic.rs"));
+}
+
 #[actix_rt::main]
 async fn main() -> Result<(), errors::Error> {
+    env_logger::init();
     dotenv::dotenv().ok();
+    let (tx_job, rx_job) = tokio::sync::mpsc::channel(1);
+    multiplexer::start(
+        &Context::new(),
+        &CONFIG.zmq_push_addr,
+        &CONFIG.zmq_deal_addr,
+        rx_job,
+    )?;
 
     let mut aud = std::collections::HashSet::new();
     aud.insert(CONFIG.audience.clone());
@@ -32,6 +47,7 @@ async fn main() -> Result<(), errors::Error> {
             .wrap(Logger::default())
             .wrap(Logger::new("%a %{User-Agent}i"))
             .data(state::AppState {
+                sender: tx_job.clone(),
                 oidc: oidc.clone(),
                 validation: validation.clone(),
             })
@@ -40,6 +56,7 @@ async fn main() -> Result<(), errors::Error> {
             .service(store::list)
             .service(store::dimensions)
             .service(store::lines)
+            .service(slicer::slice)
     })
     .bind(&CONFIG.host_addr)?
     .run()

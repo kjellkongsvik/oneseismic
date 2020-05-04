@@ -8,6 +8,7 @@ WORKDIR /rapi
 COPY rapi/Cargo.lock ./Cargo.lock
 COPY rapi/Cargo.toml ./Cargo.toml
 COPY protos/ ../protos
+COPY rapi/build.rs .
 
 RUN cargo test
 RUN rm -rf src/*
