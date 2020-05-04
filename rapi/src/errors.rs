@@ -6,6 +6,7 @@ use std::fmt;
 pub enum Error {
     Reqwest(reqwest::Error),
     Io(std::io::Error),
+    TMQ(tmq::TmqError),
 }
 
 impl fmt::Display for Error {
@@ -13,6 +14,7 @@ impl fmt::Display for Error {
         match *self {
             Error::Reqwest(ref e) => e.fmt(f),
             Error::Io(ref e) => e.fmt(f),
+            Error::TMQ(ref e) => e.fmt(f),
         }
     }
 }
@@ -22,6 +24,7 @@ impl error::Error for Error {
         match *self {
             Error::Reqwest(ref e) => Some(e),
             Error::Io(ref e) => Some(e),
+            Error::TMQ(ref e) => Some(e),
         }
     }
 }
@@ -35,5 +38,11 @@ impl From<reqwest::Error> for Error {
 impl From<std::io::Error> for Error {
     fn from(err: std::io::Error) -> Error {
         Error::Io(err)
+    }
+}
+
+impl From<tmq::TmqError> for Error {
+    fn from(err: tmq::TmqError) -> Error {
+        Error::TMQ(err)
     }
 }

@@ -73,7 +73,9 @@ mod tests {
             App::new()
                 .data(state::AppState {
                     jwks,
+                    sender: tokio::sync::mpsc::channel(1).0,
                     validation: Validation::new(Algorithm::RS256),
+                    root: "".into(),
                 })
                 .wrap(HttpAuthentication::bearer(validator))
                 .route("/", web::get().to(|| async { "" })),

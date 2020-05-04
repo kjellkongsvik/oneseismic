@@ -48,6 +48,11 @@ AUTH_HEADER = auth_header()
 @pytest.fixture(scope="session")
 def create_cubes():
     blob_service_client = BlobServiceClient.from_connection_string(az_storage())
+    for name in CUBE_NAMES:
+        try:
+            blob_service_client.delete_container(name)
+        except Exception:
+            None
 
     for name in CUBE_NAMES:
         try:

@@ -4,7 +4,10 @@ use serde::Deserialize;
 pub struct Config {
     pub host_addr: String,
     pub authserver: String,
+    pub zmq_push_addr: String,
+    pub zmq_deal_addr: String,
     pub issuer: String,
+    pub account: String,
 }
 
 // Throw the Config struct into a CONFIG lazy_static to avoid multiple processing
