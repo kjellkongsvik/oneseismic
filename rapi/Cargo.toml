@@ -26,6 +26,10 @@ tmq = "0.2"
 bytes = "0.5"
 log = "0.4"
 env_logger = "0.7"
+azure_sdk_core = "0.43"
+azure_sdk_storage_core = "0.44"
+azure_sdk_storage_blob = "0.44"
+url = "2"
 
 [dev-dependencies]
 actix-http-test = "0.2"

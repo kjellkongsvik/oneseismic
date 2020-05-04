@@ -15,6 +15,7 @@ mod openid;
 mod slice_handler;
 mod slice_model;
 mod state;
+mod store;
 
 pub mod oneseismic {
     include!(concat!(env!("OUT_DIR"), "/oneseismic.rs"));
@@ -50,7 +51,11 @@ async fn main() -> Result<(), errors::Error> {
                 root: CONFIG.account.clone(),
             })
             .wrap(HttpAuthentication::bearer(auth::validator))
-            .service(web::scope("/").configure(slice_handler::service))
+            .service(
+                web::scope("/")
+                    .configure(slice_handler::service)
+                    .configure(store::service),
+            )
     })
     .bind(&CONFIG.host_addr)?
     .run()
