@@ -36,11 +36,10 @@ services:
     image: oneseismic.azurecr.io/api:${VERSION:-latest}
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: rapi/Dockerfile
     ports:
       - '8080:8080'
     environment:
-      - API_SECRET
       - HOST_ADDR=0.0.0.0:8080
       - AUTHSERVER
       - ISSUER

@@ -7,7 +7,7 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite:3.5.0
     command: azurite-blob --blobHost 0.0.0.0 --loose
 
-  api:
+  rapi:
     depends_on:
       - auth
       - az
