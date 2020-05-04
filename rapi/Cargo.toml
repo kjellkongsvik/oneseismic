@@ -18,6 +18,16 @@ serde_derive = "1"
 actix-web-httpauth = "0.4"
 reqwest = { version = "0.10", features = ["json"] }
 log="0.4"
+prost = "0.6"
+uuid = { version = "0.8", features = ["serde", "v4"] }
+tokio = { version = "0.2", features = ["sync", "macros","rt-threaded"] }
+tmq = "0.2"
+bytes = "0.5"
+env_logger = "0.7"
+azure_sdk_core = "0.43"
+azure_sdk_storage_core = "0.44"
+azure_sdk_storage_blob = "0.45"
+url = "2"
 
 [dev-dependencies]
 actix-http-test = "0.2"
