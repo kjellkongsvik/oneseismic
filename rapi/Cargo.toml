@@ -8,8 +8,10 @@ edition = "2018"
 actix-rt = "1"
 actix-web = "2"
 actix-service = "1"
+actix-http = "1"
 dotenv = "0.15"
 envy = "0.4"
+futures = "0.3"
 lazy_static = "1"
 jsonwebtoken = "7"
 serde = { version = "1", features = ["derive"] }
@@ -18,12 +20,12 @@ serde_derive = "1"
 actix-web-httpauth = "0.4"
 reqwest = { version = "0.10", features = ["json"] }
 log="0.4"
+env_logger = "0.7"
 prost = "0.6"
 uuid = { version = "0.8", features = ["serde", "v4"] }
 tokio = { version = "0.2", features = ["sync", "macros","rt-threaded"] }
 tmq = "0.2"
 bytes = "0.5"
-env_logger = "0.7"
 azure_sdk_core = "0.43"
 azure_sdk_storage_core = "0.44"
 azure_sdk_storage_blob = "0.45"
@@ -33,3 +35,6 @@ url = "2"
 actix-http-test = "0.2"
 mockito="0.23"
 openssl = "0.10"
+
+[build-dependencies]
+prost-build = "0.6"

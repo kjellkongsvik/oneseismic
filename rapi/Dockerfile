@@ -8,8 +8,9 @@ WORKDIR /rapi
 COPY rapi/Cargo.lock ./Cargo.lock
 COPY rapi/Cargo.toml ./Cargo.toml
 COPY protos/ ../protos
+COPY rapi/build.rs .
 
-RUN cargo test
+RUN cargo test --release
 RUN rm -rf src/*
 
 COPY rapi/src ./src
@@ -17,7 +18,7 @@ COPY rapi/src ./src
 RUN rm -f ./target/debug/deps/rapi*
 RUN rm -f ./target/release/deps/rapi*
 
-RUN cargo test
+RUN cargo test --release
 
-RUN cargo build
-CMD ["./target/debug/rapi"]
+RUN cargo build --release
+CMD ["./target/release/rapi"]
