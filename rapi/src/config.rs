@@ -7,6 +7,7 @@ pub struct Config {
     pub audience: String,
     pub client_id: String,
     pub client_secret: String,
+    pub azure_storage_account: String,
 }
 
 // Throw the Config struct into a CONFIG lazy_static to avoid multiple processing
