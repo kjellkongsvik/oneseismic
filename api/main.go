@@ -33,7 +33,7 @@ func main() {
 	golog.SetLevel(logLevel)
 	oidConf, err := auth.GetOidConfig(os.Getenv("AUTHSERVER") + "/v2.0/.well-known/openid-configuration")
 	if err != nil {
-		golog.Error("could not get keyset", err)
+		golog.Fatal(err)
 	}
 
 	storageURL, err := url.Parse(os.Getenv("AZURE_STORAGE_URL"))
