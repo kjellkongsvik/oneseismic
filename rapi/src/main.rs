@@ -36,9 +36,10 @@ async fn main() -> Result<(), errors::Error> {
             .wrap(Logger::default())
             .wrap(Logger::new("%a %{User-Agent}i"))
             .data(state::AppState {
-                jwks: oidc.jwks.clone(),
+                oidc: oidc.clone(),
                 validation: validation.clone(),
             })
+            .wrap(HttpAuthentication::bearer(auth::obo))
             .wrap(HttpAuthentication::bearer(auth::validator))
             .service(web::scope("/").route("", web::get().to(index)))
     })

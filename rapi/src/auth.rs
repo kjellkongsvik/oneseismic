@@ -1,9 +1,12 @@
 use crate::state;
+use actix_web::http::header::{HeaderValue};
 use actix_web::{dev::ServiceRequest, error, Error};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use jsonwebtoken::{decode, decode_header};
 use log::trace;
 use serde::{Deserialize, Serialize};
+use reqwest::header::{HeaderMap, CONTENT_TYPE, AUTHORIZATION};
+use crate::CONFIG;
 
 pub async fn validator(
     req: ServiceRequest,
@@ -20,6 +23,7 @@ pub async fn validator(
     trace!("kid: {:?}", kid);
 
     let key = state
+        .oidc
         .jwks
         .get(&kid)
         .ok_or(error::ErrorBadRequest("invalid kid in token"))?;
@@ -28,6 +32,44 @@ pub async fn validator(
     let t = decode::<Claims>(credentials.token(), key, &state.validation);
     trace!("claims: {:?}", t);
     t.map_err(|_| error::ErrorUnauthorized("invalid token"))?;
+    Ok(req)
+}
+
+async fn get_obo(token_endpoint: &str, token: &str)  -> Result<String, Error>{
+    let data = "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer".to_string() +
+        "&client_id=" + &CONFIG.client_id +
+        "&client_secret=" + &CONFIG.client_secret +
+        "&assertion=" + token +
+        "&scope=" + "https://storage.azure.com/user_impersonation" +
+        "&requested_token_use=on_behalf_of";
+    let client = reqwest::Client::new();
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/x-www-form-urlencoded"));
+
+    #[derive(Deserialize)]
+    struct OboToken {
+        access_token: String,
+    }
+    let obot: OboToken = client.post(token_endpoint).headers(headers).body(data).send().await.unwrap().json().await.unwrap();
+    // print!("{:?}", obot.access_token);
+    Ok(obot.access_token)
+}
+
+pub async fn obo(
+    mut req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, Error> {
+    let state = req
+        .app_data::<state::AppState>()
+        .ok_or(error::ErrorInternalServerError("state"))?;
+
+    let obo = get_obo(
+        &state.oidc.token_endpoint,
+        credentials.token()).await?;
+
+    let header = req.headers_mut();
+    let v = HeaderValue::from_str(&obo)?;
+    header.insert(AUTHORIZATION, v);
     Ok(req)
 }
 
@@ -46,6 +88,7 @@ mod tests {
     use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
     use openssl::rsa::Rsa;
     use std::time::SystemTime;
+    use crate::openid::OidConf;
 
     #[actix_rt::test]
     async fn test_no_auth() {
@@ -68,11 +111,16 @@ mod tests {
         let mut jwks = std::collections::HashMap::new();
         let kid = "0";
         jwks.insert(kid.into(), DecodingKey::from_rsa_pem(&PUBLIC_KEY).unwrap());
+        let oidc = OidConf{
+            jwks,
+            issuer: "".into(),
+            token_endpoint: "".into(),
+        };
 
         let mut app = test::init_service(
             App::new()
                 .data(state::AppState {
-                    jwks,
+                    oidc,
                     validation: Validation::new(Algorithm::RS256),
                 })
                 .wrap(HttpAuthentication::bearer(validator))

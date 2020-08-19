@@ -1,8 +1,7 @@
-use jsonwebtoken::DecodingKey;
-use std::collections::{hash_map::RandomState, HashMap};
+use crate::openid::OidConf;
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct AppState<'a> {
-    pub jwks: HashMap<String, DecodingKey<'a>, RandomState>,
+    pub oidc: OidConf<'a>,
     pub validation: jsonwebtoken::Validation,
 }

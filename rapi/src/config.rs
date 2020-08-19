@@ -5,6 +5,8 @@ pub struct Config {
     pub host_addr: String,
     pub authserver: String,
     pub audience: String,
+    pub client_id: String,
+    pub client_secret: String,
 }
 
 // Throw the Config struct into a CONFIG lazy_static to avoid multiple processing
