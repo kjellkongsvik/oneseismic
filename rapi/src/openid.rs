@@ -7,6 +7,7 @@ use std::collections::{hash_map, HashMap};
 pub struct OidConf<'a> {
     pub jwks: HashMap<String, DecodingKey<'a>, hash_map::RandomState>,
     pub issuer: String,
+    pub token_endpoint: String,
 }
 
 pub async fn get_config<'a>(uri: &str) -> Result<OidConf<'a>, errors::Error> {
@@ -28,6 +29,7 @@ pub async fn get_config<'a>(uri: &str) -> Result<OidConf<'a>, errors::Error> {
     Ok(OidConf {
         jwks,
         issuer: oidc.issuer,
+        token_endpoint: oidc.token_endpoint,
     })
 }
 
@@ -42,6 +44,7 @@ where
 struct Oid {
     jwks_uri: String,
     issuer: String,
+    token_endpoint: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -68,7 +71,10 @@ mod tests {
             .unwrap()
             .join("/common/discovery/keys")
             .unwrap();
-        let disc_body = format!(r#"{{"jwks_uri": "{}", "issuer": ""}}"#, some_uri);
+        let disc_body = format!(
+            r#"{{"jwks_uri": "{}", "issuer": "", "token_endpoint": "endpoint"}}"#,
+            some_uri
+        );
         let jwk_body = r#" { "keys": [ {
                         "kty": "RSA",
                         "e": "AQAB",
@@ -95,6 +101,7 @@ mod tests {
         let conf = get_config(&mockito::server_url()).await.unwrap();
         assert_eq!(conf.jwks.len(), 1);
         assert_ne!(conf.jwks.get("N"), None);
+        assert_eq!(conf.token_endpoint, "endpoint");
 
         jwk_mock.assert();
         disc_mock.assert();
