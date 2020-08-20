@@ -3,9 +3,9 @@ package server
 import (
 	"fmt"
 
-	zmq "github.com/pebbe/zmq4"
 	"github.com/google/uuid"
 	"github.com/kataras/golog"
+	zmq "github.com/pebbe/zmq4"
 )
 
 type job struct {
@@ -29,7 +29,7 @@ type process struct {
 	// Return-address that flows through to make sure that data is returned to
 	// the correct node that manages the session
 	address string
-	pid string
+	pid     string
 	request []byte
 }
 
@@ -43,9 +43,9 @@ type process struct {
  * compare.
  */
 type partialResult struct {
-	pid string
-	n int
-	m int
+	pid     string
+	n       int
+	m       int
 	payload []byte
 }
 
@@ -123,7 +123,7 @@ func (p *routedPartialResult) sendZMQ(socket *zmq.Socket) (total int, err error)
 
 type sessions struct {
 	identity string
-	queue chan job
+	queue    chan job
 }
 
 /*
@@ -141,14 +141,15 @@ type procIO struct {
 }
 
 func (s *sessions) Schedule(proc *process) procIO {
-	io := procIO {
+	io := procIO{
 		out: make(chan partialResult),
 		err: make(chan string),
 	}
+	golog.Debugf("%v %v", proc.pid, proc.address)
 	s.queue <- job{
-		pid: proc.pid,
+		pid:     proc.pid,
 		request: proc.request,
-		io: io,
+		io:      io,
 	}
 	return io
 }
@@ -156,13 +157,13 @@ func (s *sessions) Schedule(proc *process) procIO {
 func newSessions() *sessions {
 	return &sessions{
 		identity: uuid.New().String(),
-		queue: make(chan job),
+		queue:    make(chan job),
 	}
 }
 
 func all(a []bool) bool {
 	for _, x := range a {
-		if (!x) {
+		if !x {
 			return false
 		}
 	}
@@ -319,13 +320,14 @@ func (s *sessions) Run(reqNdpt string, repNdpt string, failureAddr string) {
 		case j := <-s.queue:
 			proc := process{
 				address: s.identity,
-				pid: j.pid,
+				pid:     j.pid,
 				request: j.request,
 			}
-			processes[j.pid] = &procstatus {
-				io: j.io,
+			processes[j.pid] = &procstatus{
+				io:        j.io,
 				completed: nil,
 			}
+			golog.Debugf("sending: %v", reqNdpt)
 			proc.sendZMQ(req)
 		}
 	}

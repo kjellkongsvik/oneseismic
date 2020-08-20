@@ -65,7 +65,7 @@ type sliceModel interface {
 		lineno int32,
 		requestid string,
 		token string,
-) (*oneseismic.SliceResponse, error)
+	) (*oneseismic.SliceResponse, error)
 }
 
 type sliceController struct {
@@ -95,6 +95,7 @@ func (sc *sliceController) get(ctx iris.Context) {
 		return
 	}
 	requestid := uuid.New().String()
+	golog.Infof("%v: %v/slice/%v/%v", requestid, guid, dim, lineno)
 	slice, err := sc.slicer.fetchSlice(guid, dim, lineno, requestid, token)
 	if err != nil {
 		switch e := err.(type) {

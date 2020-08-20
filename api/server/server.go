@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/equinor/oneseismic/api/oneseismic"
+	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12"
 	"github.com/pebbe/zmq4"
 	"google.golang.org/protobuf/proto"
@@ -53,9 +54,11 @@ func CoreMock(
 	out.Connect(repNdpt)
 
 	for {
+		golog.Debugf("Waiting: %v", reqNdpt)
 		m, _ := in.RecvMessageBytes(0)
 		proc := process{}
 		err := proc.loadZMQ(m)
+		golog.Debugf("%v: got", proc.pid)
 		if err != nil {
 			msg := "Broken process (loadZMQ) in core emulation: %s"
 			log.Fatalf(msg, err.Error())
@@ -78,10 +81,16 @@ func CoreMock(
 			}
 
 			_, err = partial.sendZMQ(out)
-
-			for err == zmq4.EHOSTUNREACH {
-				_, err = out.SendMessage(m)
+			if err != nil {
+				for err == zmq4.EHOSTUNREACH {
+					golog.Warnf("%v: resending", proc.pid)
+					_, err = out.SendMessage(m)
+				}
+				if err != zmq4.EHOSTUNREACH {
+					golog.Fatalf("%v: could not send", proc.pid)
+				}
 			}
+			golog.Debugf("%v: sent %v/%v", proc.pid, i, numPartials)
 		}
 	}
 }

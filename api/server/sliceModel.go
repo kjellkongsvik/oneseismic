@@ -21,7 +21,7 @@ func (s *slicer) fetchSlice(
 	token string,
 ) (*oneseismic.SliceResponse, error) {
 
-	msg := oneseismic.ApiRequest {
+	msg := oneseismic.ApiRequest{
 		Requestid:       requestid,
 		Token:           token,
 		Guid:            guid,
@@ -46,8 +46,9 @@ func (s *slicer) fetchSlice(
 
 	proc := process{pid: requestid, request: req}
 	fr := oneseismic.FetchResponse{}
-
+	golog.Infof("%v: sceduling", requestid)
 	io := s.sessions.Schedule(&proc)
+	golog.Infof("%v: sceduled", requestid)
 
 	/*
 	 * Read and parse messages as they come, and consider the process complete
@@ -65,6 +66,8 @@ func (s *slicer) fetchSlice(
 	 */
 	var tiles []*oneseismic.SliceTile
 	for partial := range io.out {
+		golog.Infof("%v: reply", requestid)
+
 		err = proto.Unmarshal(partial.payload, &fr)
 
 		if err != nil {

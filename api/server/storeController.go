@@ -126,7 +126,7 @@ func (sc *storeController) lines(ctx iris.Context) {
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
 	}
-	
+
 	guid := ctx.Params().GetString("guid")
 	if len(guid) == 0 {
 		ctx.StatusCode(http.StatusBadRequest)

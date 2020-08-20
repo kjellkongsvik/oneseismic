@@ -25,6 +25,7 @@ require (
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/pebbe/zmq4 v1.2.1
+	github.com/pkg/profile v1.5.0
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/stretchr/testify v1.6.1
