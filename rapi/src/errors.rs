@@ -1,6 +1,8 @@
+use crate::multiplexer;
 use reqwest;
 use std::error;
 use std::fmt;
+use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub enum Error {
@@ -44,5 +46,37 @@ impl From<std::io::Error> for Error {
 impl From<tmq::TmqError> for Error {
     fn from(err: tmq::TmqError) -> Error {
         Error::TMQ(err)
+    }
+}
+
+#[derive(Debug)]
+pub enum FetchError {
+    RecvError,
+    SendError(mpsc::error::SendError<multiplexer::Job>),
+    DecodeError(prost::DecodeError),
+    EncodeError(prost::EncodeError),
+}
+
+impl fmt::Display for FetchError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "internal error")
+    }
+}
+
+impl From<prost::DecodeError> for FetchError {
+    fn from(err: prost::DecodeError) -> FetchError {
+        FetchError::DecodeError(err)
+    }
+}
+
+impl From<prost::EncodeError> for FetchError {
+    fn from(err: prost::EncodeError) -> FetchError {
+        FetchError::EncodeError(err)
+    }
+}
+
+impl From<mpsc::error::SendError<multiplexer::Job>> for FetchError {
+    fn from(err: mpsc::error::SendError<multiplexer::Job>) -> FetchError {
+        FetchError::SendError(err)
     }
 }
