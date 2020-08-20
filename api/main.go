@@ -7,6 +7,7 @@ import (
 
 	"github.com/equinor/oneseismic/api/auth"
 	_ "github.com/equinor/oneseismic/api/docs"
+	"github.com/equinor/oneseismic/api/oneseismic"
 	"github.com/equinor/oneseismic/api/server"
 	"github.com/iris-contrib/swagger/v12"
 	"github.com/iris-contrib/swagger/v12/swaggerFiles"
@@ -28,6 +29,10 @@ func init() {
 //@name Authorization
 func main() {
 	logLevel := os.Getenv("LOG_LEVEL")
+
+	if len(os.Getenv("MOCK")) > 0 {
+		mock()
+	}
 
 	golog.SetTimeFormat(time.RFC3339)
 	golog.SetLevel(logLevel)
@@ -62,3 +67,4 @@ func main() {
 		golog.Fatal(err)
 	}
 }
+
