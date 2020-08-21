@@ -40,5 +40,11 @@ func main() {
 		SliceShape: &oneseismic.SliceShape{Dim0: 201, Dim1: 720},
 	}
 	golog.Debug("core mock")
-	server.CoreMock(os.Getenv("ZMQ_REQ_ADDR"), os.Getenv("ZMQ_REP_ADDR"), os.Getenv("ZMQ_FAILURE_ADDR"), slice, 100)
+	server.CoreMock(
+		os.Getenv("ZMQ_REQ_ADDR"),
+		os.Getenv("ZMQ_REP_ADDR"),
+		os.Getenv("ZMQ_FAILURE_ADDR"),
+		slice,
+		100,
+	)
 }

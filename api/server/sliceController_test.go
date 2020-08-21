@@ -3,13 +3,12 @@ package server
 import (
 	"testing"
 
-	"github.com/equinor/oneseismic/api/oneseismic"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
 )
 
 type sliceMock struct {
-	slices map[string]oneseismic.SliceResponse
+	slices map[string]SR
 }
 
 func (s *sliceMock) fetchSlice(
@@ -18,7 +17,7 @@ func (s *sliceMock) fetchSlice(
 	lineno int32,
 	requestid string,
 	token string,
-) (*oneseismic.SliceResponse, error) {
+) (*SR, error) {
 	l, ok := s.slices[guid]
 	if ok {
 		return &l, nil
@@ -30,7 +29,7 @@ func TestExistingSlice(t *testing.T) {
 	app := iris.Default()
 	app.Use(mockOboJWT())
 
-	m := map[string]oneseismic.SliceResponse{"some_guid": {}}
+	m := map[string]SR{"some_guid": {}}
 	sc := &sliceController{&sliceMock{m}}
 
 	app.Get("/{guid:string}/slice/{dim:int32}/{lineno:int32}", sc.get)

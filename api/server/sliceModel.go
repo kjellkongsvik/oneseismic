@@ -13,13 +13,19 @@ type slicer struct {
 	sessions *sessions
 }
 
+type SR struct {
+	V []float32
+	Shape0 int32
+	Shape1 int32
+ }
+
 func (s *slicer) fetchSlice(
 	guid string,
 	dim int32,
 	lineno int32,
 	requestid string,
 	token string,
-) (*oneseismic.SliceResponse, error) {
+) (*SR, error) {
 
 	msg := oneseismic.ApiRequest{
 		Requestid:       requestid,
@@ -97,5 +103,14 @@ func (s *slicer) fetchSlice(
 	}
 
 	fr.GetSlice().Tiles = tiles
-	return fr.GetSlice(), nil
+	slice := fr.GetSlice()
+	dim0 := slice.SliceShape.Dim0
+	dim1 := slice.SliceShape.Dim1
+ 
+	sr := SR{
+		Shape0: dim0,
+		Shape1: dim1,
+		V: make([]float32, dim0*dim1),
+	}
+ 	return &sr, nil
 }

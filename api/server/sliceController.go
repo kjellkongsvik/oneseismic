@@ -3,11 +3,9 @@ package server
 import (
 	"net/http"
 
-	"github.com/equinor/oneseismic/api/oneseismic"
 	"github.com/google/uuid"
 	"github.com/kataras/golog"
 	"github.com/kataras/iris/v12"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type failure struct {
@@ -65,7 +63,7 @@ type sliceModel interface {
 		lineno int32,
 		requestid string,
 		token string,
-	) (*oneseismic.SliceResponse, error)
+	) (*SR, error)
 }
 
 type sliceController struct {
@@ -110,13 +108,12 @@ func (sc *sliceController) get(ctx iris.Context) {
 	}
 
 	ctx.Header("Content-Type", "application/json")
-	m := protojson.MarshalOptions{EmitUnpopulated: true, UseProtoNames: true}
-	js, err := m.Marshal(slice)
+
 	if err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
 		return
 	}
-	_, err = ctx.Write(js)
+	_, err = ctx.JSON(slice)
 	if err != nil {
 		ctx.StatusCode(http.StatusInternalServerError)
 		return

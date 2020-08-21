@@ -28,7 +28,6 @@ func init() {
 //@name Authorization
 func main() {
 	logLevel := os.Getenv("LOG_LEVEL")
-	pfile := os.Getenv("MEM_PROFILING")
 	golog.SetTimeFormat(time.RFC3339)
 	golog.SetLevel(logLevel)
 	oidConf, err := auth.GetOidConfig(os.Getenv("AUTHSERVER") + "/v2.0/.well-known/openid-configuration")
