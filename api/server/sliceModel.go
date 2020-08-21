@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/equinor/oneseismic/api/oneseismic"
 	"github.com/kataras/golog"
@@ -14,10 +15,10 @@ type slicer struct {
 }
 
 type SR struct {
-	V []float32
+	V      []float32
 	Shape0 int32
 	Shape1 int32
- }
+}
 
 func (s *slicer) fetchSlice(
 	guid string,
@@ -70,6 +71,7 @@ func (s *slicer) fetchSlice(
 	 * TODO: This gives weak failure handling, and Session needs a way to
 	 * signal failed processes
 	 */
+	l := 0
 	var tiles []*oneseismic.SliceTile
 	for partial := range io.out {
 		golog.Infof("%v: reply", requestid)
@@ -90,10 +92,12 @@ func (s *slicer) fetchSlice(
 				return nil, fmt.Errorf("internal error")
 			}
 		}
-
+		for _, t := range slice.GetTiles() {
+			l = l + len(t.V)
+		}
 		tiles = append(tiles, slice.GetTiles()...)
 	}
-
+	golog.Infof("tile size: %v", l)
 	/*
 	 * On successful runs, there are no messages on this channel, and the loop
 	 * turns into a no-op.
@@ -106,11 +110,16 @@ func (s *slicer) fetchSlice(
 	slice := fr.GetSlice()
 	dim0 := slice.SliceShape.Dim0
 	dim1 := slice.SliceShape.Dim1
- 
+	r := rand.New(rand.NewSource(99))
+	v := make([]float32, dim0*dim1)
+	for i := range v {
+		v[i] = r.Float32()
+	}
+
 	sr := SR{
 		Shape0: dim0,
 		Shape1: dim1,
-		V: make([]float32, dim0*dim1),
+		V:      v,
 	}
- 	return &sr, nil
+	return &sr, nil
 }
