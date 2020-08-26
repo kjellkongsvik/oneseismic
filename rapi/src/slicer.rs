@@ -4,21 +4,34 @@ use crate::oneseismic;
 use crate::state::AppState;
 use crate::CONFIG;
 use actix_http::ResponseBuilder;
-use actix_web::{error, get, http::header, http::StatusCode, web, HttpResponse, Result};
-use log::trace;
+use actix_web::{
+    error, get, http::header, http::StatusCode, web, HttpRequest, HttpResponse, Result,
+};
+use log::{error, trace};
 use prost::bytes::BytesMut;
 use prost::Message;
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
-#[get("/{account}/{guid}/slice/{dim}/{ord}")]
+fn tok(req: HttpRequest) -> String {
+    req.headers()
+        .get("Authorization")
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string()
+}
+
+#[get("/{guid}/slice/{dim}/{ord}")]
 async fn slice<'a>(
     p: web::Path<(String, i32, i32)>,
     state: web::Data<AppState<'a>>,
+    req: HttpRequest,
 ) -> Result<HttpResponse> {
     let ar = oneseismic::ApiRequest {
         storage_endpoint: "".into(),
-        token: "".into(),
+        token: tok(req),
         guid: p.0.clone(),
         requestid: Uuid::new_v4().to_string(),
         root: CONFIG.azure_storage_account.clone(),
@@ -29,10 +42,15 @@ async fn slice<'a>(
         }),
         function: None,
     };
-    trace!("ApiRequest: {:?}", &ar);
+    let mut _ar = ar.clone();
+    _ar.token = "<REDACTED>".into();
+    trace!("ApiRequest: {:?}", &_ar);
     match fetch(state.sender.clone(), ar).await?.function {
         Some(sr) => Ok(HttpResponse::Ok().json(sr)),
-        _ => Err(error::ErrorNotFound("not found")),
+        _ => {
+            error!("??");
+            Err(error::ErrorNotFound("not found"))
+        }
     }
 }
 
@@ -53,7 +71,6 @@ pub async fn fetch(
     ar: oneseismic::ApiRequest,
 ) -> Result<oneseismic::FetchResponse, FetchError> {
     let (tx_fr, mut rx_fr) = mpsc::channel(1);
-
     let mut request = BytesMut::with_capacity(10);
     ar.encode(&mut request)?;
     let job = multiplexer::Job {
@@ -61,9 +78,11 @@ pub async fn fetch(
         request: request.into(),
         tx: tx_fr,
     };
-
+    trace!("Sending job_id: {:?}", job.job_id);
     tx_job.clone().send(job).await?;
     let bytes = rx_fr.recv().await.ok_or(FetchError::RecvError)?;
+
+    trace!("got bytes: {:?}", bytes);
     oneseismic::FetchResponse::decode(&bytes[..]).map_err(FetchError::DecodeError)
 }
 

@@ -181,7 +181,7 @@ class client:
 
         cube_ids : list of strings
         """
-        return self.get('/')
+        return self.get('')
 
     def cube(self, id):
         """ Get a cube handle

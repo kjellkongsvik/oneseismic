@@ -1,9 +1,9 @@
+use bytes::{Bytes, BytesMut};
 use futures::SinkExt;
 use futures::StreamExt;
-
-use bytes::{Bytes, BytesMut};
-use log::warn;
+use log::{trace, warn};
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Debug)]
@@ -13,27 +13,57 @@ pub struct Job {
     pub tx: Sender<Bytes>,
 }
 
+struct PartialResult {
+    pid: String,
+    n: i32,
+    m: i32,
+    payload: BytesMut,
+}
+
+impl TryFrom<tmq::Multipart> for PartialResult {
+    type Error = &'static str;
+
+    fn try_from(item: tmq::Multipart) -> Result<Self, Self::Error> {
+        match item.len() {
+            3 => Ok(PartialResult {
+                pid: item[0].as_str().unwrap().into(),
+                n: std::str::FromStr::from_str(
+                    item[1].as_str().unwrap().split("/").nth(0).unwrap(),
+                )
+                .unwrap(),
+                m: std::str::FromStr::from_str(
+                    item[1].as_str().unwrap().split("/").nth(1).unwrap(),
+                )
+                .unwrap(),
+                payload: BytesMut::from(&item[2][..]),
+            }),
+            _ => Err("len"),
+        }
+    }
+}
+
 pub fn start(
     ctx: &tmq::Context,
-    pusher_addr: &str,
-    dealer_addr: &str,
+    rep_addr: &str,
+    req_addr: &str,
     rx_job: Receiver<Job>,
 ) -> Result<(), tmq::TmqError> {
     let zmq_identity = &uuid::Uuid::new_v4().to_string();
 
-    let pusher = tmq::push(&ctx).bind(pusher_addr)?;
+    let pusher = tmq::push(&ctx).bind(req_addr)?;
     let dealer = tmq::dealer(&ctx)
         .set_identity(zmq_identity.as_bytes())
-        .bind(dealer_addr)?;
+        .bind(rep_addr)?;
     tokio::spawn(multiplexer(rx_job, zmq_identity.into(), pusher, dealer));
     Ok(())
 }
 
-fn listen_core(mut dealer: tmq::dealer::Dealer) -> Receiver<Result<tmq::Multipart, tmq::TmqError>> {
+fn listen_core(mut dealer: tmq::dealer::Dealer) -> Receiver<PartialResult> {
     let (mut tx, rx) = channel(1);
     tokio::spawn(async move {
         while let Some(msg) = dealer.next().await {
-            if let Err(_) = tx.send(msg).await {
+            let partial = PartialResult::try_from(msg.unwrap()).unwrap();
+            if let Err(_) = tx.send(partial).await {
                 break;
             }
         }
@@ -53,6 +83,7 @@ async fn multiplexer(
     loop {
         tokio::select! {
             Some(job) = rx_job.recv() => {
+                trace!("sending job_id: {:?}", job.job_id);
                 let msg = vec![zmq_identity.as_bytes(), job.job_id.as_bytes(), &job.request[..]];
                 if let Err(e) = pusher.send(msg).await{
                     warn!("{}", e);
@@ -61,7 +92,7 @@ async fn multiplexer(
                 }
                 jobs.insert(job.job_id, job.tx);
             },
-            Some(Ok(msg)) = core.recv() => {
+            Some(partial) = core.recv() => {
                 if let Some(id) = msg[0].as_str(){
                     if let Some(mut job) = jobs.remove(id) {
                         if let Err(e) = job.send(BytesMut::from(&msg[1][..]).into()).await {

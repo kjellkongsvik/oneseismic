@@ -27,8 +27,8 @@ async fn main() -> Result<(), errors::Error> {
     let (tx_job, rx_job) = tokio::sync::mpsc::channel(1);
     multiplexer::start(
         &Context::new(),
-        &CONFIG.zmq_push_addr,
-        &CONFIG.zmq_deal_addr,
+        &CONFIG.zmq_rep_addr,
+        &CONFIG.zmq_req_addr,
         rx_job,
     )?;
 
