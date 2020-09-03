@@ -7,7 +7,7 @@ services:
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
   auth:
-    image: lambdaville/no-factor-auth:v0.1.0
+    image: ghcr.io/kjellkongsvik/no-factor-auth:latest
     environment:
       - TOKEN_ENDPOINT_ISSUER=https://sts.windows.net/
       - TOKEN_ENDPOINT_AUDIENCE=https://storage.azure.com
