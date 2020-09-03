@@ -53,9 +53,7 @@ AUTH_CLIENT = client_auth(auth_header())
 @pytest.fixture(scope="session")
 def create_cubes():
     credential = CustomTokenCredential()
-    account_url = os.getenv("AZURE_STORAGE_URL").format(
-        os.getenv("AZURE_STORAGE_ACCOUNT")
-    )
+    account_url = os.getenv("AZURE_STORAGE_URL")
     blob_service_client = BlobServiceClient(account_url, credential)
     for c in blob_service_client.list_containers():
         blob_service_client.delete_container(c)
