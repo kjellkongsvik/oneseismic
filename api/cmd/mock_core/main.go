@@ -1,18 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 
 	"github.com/equinor/oneseismic/api/oneseismic"
 	"github.com/equinor/oneseismic/api/server"
-	"github.com/joho/godotenv"
 	"github.com/kataras/golog"
 )
-
-func init() {
-	godotenv.Load() // nolint, silently ignore missing or invalid .env
-}
 
 func main() {
 	golog.SetLevel(os.Getenv("LOG_LEVEL"))
@@ -40,9 +36,19 @@ func main() {
 		SliceShape: &oneseismic.SliceShape{Dim0: 201, Dim1: 720},
 	}
 	golog.Debug("core mock")
+	req := os.Getenv("ZMQ_REQ_ADDR")
+	if len(req) == 0 {
+		req = "tcp://localhost:6144"
+	}
+	rep := os.Getenv("ZMQ_REP_ADDR")
+	if len(rep) == 0 {
+		rep = "tcp://localhost:6143"
+	}
+	fmt.Printf("Listening on %v\n", req)
+	fmt.Printf("Replying on %v\n", rep)
 	server.CoreMock(
-		os.Getenv("ZMQ_REQ_ADDR"),
-		os.Getenv("ZMQ_REP_ADDR"),
+		req,
+		rep,
 		os.Getenv("ZMQ_FAILURE_ADDR"),
 		slice,
 		100,
