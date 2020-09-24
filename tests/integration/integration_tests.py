@@ -17,9 +17,6 @@ AUTHSERVER = os.getenv("AUTHSERVER", "http://localhost:8089")
 AUDIENCE = os.getenv("AUDIENCE")
 STORAGE_URL = os.getenv("AZURE_STORAGE_URL")
 
-with open("./small.sgy", "rb") as f:
-    META = scan.scan(f)
-
 
 class CustomTokenCredential(object):
     def get_token(self, *scopes, **kwargs):
@@ -68,18 +65,19 @@ def upload_cubes(data):
     with open(fname, "rb") as f:
         upload.upload(params, meta, f, blob_service_client)
 
+    return meta
+
 
 @pytest.fixture(scope="session")
-def create_cubes():
-    credential = CustomTokenCredential()
-    blob_service_client = BlobServiceClient(STORAGE_URL, credential)
-    for c in requests.get(API_ADDR, headers=AUTH_HEADER).json():
-        blob_service_client.get_container_client(c).delete_container()
+def meta():
+    w, h, d = 2, 2, 2
+    data = np.ndarray(shape=(w, h, d), dtype=np.float32)
+    for i in range(w):
+        for j in range(h):
+            for k in range(d):
+                data[i, j, k] = i * j * k
 
-    shape = [64, 64, 64]
-    params = {"subcube-dims": shape}
-    with open("small.sgy", "rb") as f:
-        upload.upload(params, META, f, blob_service_client)
+    return upload_cubes(data)
 
 
 def test_no_auth():
@@ -92,37 +90,37 @@ def test_auth():
     assert r.status_code == 200
 
 
-def test_list_cubes(create_cubes):
+def test_list_cubes(meta):
     r = requests.get(API_ADDR, headers=AUTH_HEADER)
     assert r.status_code == 200
-    assert r.json() == [META["guid"]]
+    assert r.json() == [meta["guid"]]
 
 
-def test_services(create_cubes):
-    r = requests.get(API_ADDR + "/" + META["guid"], headers=AUTH_HEADER)
+def test_services(meta):
+    r = requests.get(API_ADDR + "/" + meta["guid"], headers=AUTH_HEADER)
     assert r.status_code == 200
     assert r.json() == ["slice"]
 
 
-def test_cube_404(create_cubes):
+def test_cube_404(meta):
     r = requests.get(API_ADDR + "/b", headers=AUTH_HEADER)
     assert r.status_code == 404
 
 
-def test_dimensions(create_cubes):
-    r = requests.get(API_ADDR + "/" + META["guid"] + "/slice", headers=AUTH_HEADER)
+def test_dimensions(meta):
+    r = requests.get(API_ADDR + "/" + meta["guid"] + "/slice", headers=AUTH_HEADER)
     assert r.status_code == 200
     assert r.json() == [0, 1, 2]
 
 
-def test_lines(create_cubes):
-    r = requests.get(API_ADDR + "/" + META["guid"] + "/slice/1", headers=AUTH_HEADER)
+def test_lines(meta):
+    r = requests.get(API_ADDR + "/" + meta["guid"] + "/slice/1", headers=AUTH_HEADER)
     assert r.status_code == 200
-    assert r.json() == META["dimensions"][1]
+    assert r.json() == meta["dimensions"][1]
 
 
-def test_lines_404(create_cubes):
-    r = requests.get(API_ADDR + "/" + META["guid"] + "/slice/3", headers=AUTH_HEADER)
+def test_lines_404(meta):
+    r = requests.get(API_ADDR + "/" + meta["guid"] + "/slice/3", headers=AUTH_HEADER)
     assert r.status_code == 404
 
 
