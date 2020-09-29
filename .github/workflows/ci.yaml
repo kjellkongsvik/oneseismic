@@ -23,8 +23,6 @@ jobs:
       - name: Load cached Docker layers
         run: |
           if [ -d "docker-cache" ]; then
-            cat docker-cache/x* > base.tar
-            docker load < base.tar
             pushd docker-cache
             if [ -f api.tar ]; then
               docker load < api.tar
@@ -34,7 +32,6 @@ jobs:
             fi
             popd
             rm -rf docker-cache
-            rm -rf base.tar
           fi
       - name: Build integration test images
         if: steps.cache.outputs.cache-hit != 'true'
