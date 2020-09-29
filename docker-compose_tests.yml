@@ -33,9 +33,13 @@ services:
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
   test:
+    image: tests
     build:
       context: .
       dockerfile: tests/Dockerfile
+      cache_from:
+        - tests:latest
+
     depends_on:
       - api
       - az
