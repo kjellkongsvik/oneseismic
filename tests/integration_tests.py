@@ -112,7 +112,7 @@ def test_dimensions(cube):
     assert c.cube(cube).dim1 == [1, 2]
     assert c.cube(cube).dim2 == [0, 4000]
 
-#dummy
+#dummy0
 @settings(deadline=None, max_examples=6)
 @given(
     w=st.integers(min_value=2, max_value=5),
