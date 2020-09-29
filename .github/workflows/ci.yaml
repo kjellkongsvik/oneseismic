@@ -25,6 +25,9 @@ jobs:
           if [ -d "docker-cache" ]; then
             cat docker-cache/x* > base.tar
             docker load < base.tar
+            if [ -f docker-cache/api.tar ]; then
+              docker load < docker-cache/api.tar
+            fi
             rm -rf docker-cache
             rm -rf base.tar
           fi
@@ -32,8 +35,9 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           docker-compose -f docker-compose.yml -f docker-compose_tests.yml build
-          docker save oneseismic.azurecr.io/base $(docker history -q oneseismic.azurecr.io/base | awk '!/<missing>/{print}') > base.tar
           mkdir docker-cache
+          docker save oneseismic.azurecr.io/base $(docker history -q oneseismic.azurecr.io/base | awk '!/<missing>/{print}') > base.tar
+          docker save oneseismic.azurecr.io/api $(docker history -q oneseismic.azurecr.io/api | awk '!/<missing>/{print}') > docker-cache/api.tar
           split -b 100m base.tar docker-cache/x
           rm -rf base.tar
       - name: Run integration tests
