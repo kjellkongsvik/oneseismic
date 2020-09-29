@@ -45,7 +45,7 @@ jobs:
           ls -rtoh docker-cache
           docker save oneseismic.azurecr.io/base $(docker history -q oneseismic.azurecr.io/base | awk '!/<missing>/{print}') > docker-cache/base.tar
           docker save oneseismic.azurecr.io/api $(docker history -q oneseismic.azurecr.io/api | awk '!/<missing>/{print}') > docker-cache/api.tar
-          # docker save test $(docker history -q oneseismic.azurecr.io/test | awk '!/<missing>/{print}') > docker-cache/test.tar
+          docker save oneseismic.azurecr.io/test $(docker history -q oneseismic.azurecr.io/test | awk '!/<missing>/{print}') > docker-cache/test.tar
           ls -rtoh docker-cache
       - name: Run integration tests
         if: success()
