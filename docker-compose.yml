@@ -1,10 +1,12 @@
-version: '3.0'
+version: '3.2'
 services:
   manifest:
     image: oneseismic.azurecr.io/base:${VERSION:-latest}
     build:
       context: .
       dockerfile: core/Dockerfile
+      cache_from:
+        - oneseismic.azurecr.io/base:latest
     command: [
         "oneseismic-manifest",
         "--source",  "tcp://api:6143",
@@ -19,6 +21,8 @@ services:
     build:
       context: .
       dockerfile: core/Dockerfile
+      cache_from:
+        - oneseismic.azurecr.io/base:latest
     command: [
         "oneseismic-fragment",
         "--source",  "tcp://manifest:6142",

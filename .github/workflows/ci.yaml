@@ -12,7 +12,30 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Run integration tests
+      - name: Load Cache Keys
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: docker-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+      - name: Load cached Docker layers
         run: |
-          docker-compose -f docker-compose.yml -f docker-compose_tests.yml up --build --exit-code-from test
+          if [ -d "docker-cache" ]; then
+            cat docker-cache/x* > base.tar
+            docker load < base.tar
+            rm -rf docker-cache
+            rm -rf base.tar
+          fi
+      - name: Build integration test images
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose_tests.yml build
+          docker save oneseismic.azurecr.io/base $(docker history -q oneseismic.azurecr.io/base | awk '!/<missing>/{print}') > base.tar
+          mkdir docker-cache
+          split -b 100m base.tar docker-cache/x
+          rm -rf base.tar
+      - name: Run integration tests
+        if: success()
+        run: docker-compose -f docker-compose.yml -f docker-compose_tests.yml up --exit-code-from test
