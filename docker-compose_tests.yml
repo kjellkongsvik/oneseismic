@@ -1,4 +1,4 @@
-version: '3.0'
+version: '3.2'
 services:
   fragment:
     volumes:
@@ -33,9 +33,13 @@ services:
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
   test:
+    image: oneseismic.azurecr.io/test
     build:
       context: .
       dockerfile: tests/Dockerfile
+      cache_from:
+        - oneseismic.azurecr.io/test:latest
+
     depends_on:
       - api
       - az

@@ -12,7 +12,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Run integration tests
+      - name: Load Cache Keys
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: docker-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+      - name: Load cached Docker layers
         run: |
-          docker-compose -f docker-compose.yml -f docker-compose_tests.yml up --build --exit-code-from test
+          ls -rtoh docker-cache
+          if [ -d "docker-cache" ]; then
+            pushd docker-cache
+            if [ -f api.tar ]; then
+              docker load < api.tar
+            fi
+            if [ -f base.tar ]; then
+              docker load < base.tar
+            fi
+            if [ -f tests.tar ]; then
+              docker load < tests.tar
+            fi
+            popd
+            rm -rf docker-cache
+          fi
+      - name: Build integration test images
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose_tests.yml build
+          mkdir -p docker-cache
+          ls -rtoh docker-cache
+          docker save oneseismic.azurecr.io/base $(docker history -q oneseismic.azurecr.io/base | awk '!/<missing>/{print}') > docker-cache/base.tar
+          docker save oneseismic.azurecr.io/api $(docker history -q oneseismic.azurecr.io/api | awk '!/<missing>/{print}') > docker-cache/api.tar
+          docker save oneseismic.azurecr.io/test $(docker history -q oneseismic.azurecr.io/test | awk '!/<missing>/{print}') > docker-cache/test.tar
+          ls -rtoh docker-cache
+      - name: Run integration tests
+        if: success()
+        run: docker-compose -f docker-compose.yml -f docker-compose_tests.yml up --exit-code-from test
