@@ -33,12 +33,12 @@ services:
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
   test:
-    image: tests
+    image: oneseismic.azurecr.io/test
     build:
       context: .
       dockerfile: tests/Dockerfile
       cache_from:
-        - tests:latest
+        - oneseismic.azurecr.io/test:latest
 
     depends_on:
       - api

@@ -22,6 +22,7 @@ jobs:
             ${{ runner.os }}-docker-
       - name: Load cached Docker layers
         run: |
+          ls -rtoh docker-cache
           if [ -d "docker-cache" ]; then
             pushd docker-cache
             if [ -f api.tar ]; then
@@ -40,10 +41,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           docker-compose -f docker-compose.yml -f docker-compose_tests.yml build
-          mkdir docker-cache
+          mkdir -p docker-cache
+          ls -rtoh docker-cache
           docker save oneseismic.azurecr.io/base $(docker history -q oneseismic.azurecr.io/base | awk '!/<missing>/{print}') > docker-cache/base.tar
           docker save oneseismic.azurecr.io/api $(docker history -q oneseismic.azurecr.io/api | awk '!/<missing>/{print}') > docker-cache/api.tar
-          docker save tests $(docker history -q tests | awk '!/<missing>/{print}') > docker-cache/tests.tar
+          # docker save test $(docker history -q oneseismic.azurecr.io/test | awk '!/<missing>/{print}') > docker-cache/test.tar
+          ls -rtoh docker-cache
       - name: Run integration tests
         if: success()
         run: docker-compose -f docker-compose.yml -f docker-compose_tests.yml up --exit-code-from test
