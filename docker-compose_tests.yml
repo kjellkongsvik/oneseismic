@@ -7,11 +7,16 @@ services:
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
   auth:
-    image: lambdaville/no-factor-auth:v0.1.0
+    image: ghcr.io/kjellkongsvik/no-factor-auth:latest
     environment:
       - TOKEN_ENDPOINT_ISSUER=https://sts.windows.net/
       - TOKEN_ENDPOINT_AUDIENCE=https://storage.azure.com
       - TOKEN_ENDPOINT_SUBJECT=https://storage.azure.com
+      - CERT_FILE=/etc/ssl/certs/auth.pem
+      - KEY_FILE=/etc/ssl/certs/key.pem
+    volumes:
+      - ./tests/ssl/auth.pem:/etc/ssl/certs/auth.pem
+      - ./tests/ssl/key.pem:/etc/ssl/certs/key.pem
 
   az:
     image: mcr.microsoft.com/azure-storage/azurite:latest
@@ -26,22 +31,26 @@ services:
       - auth
       - az
     environment:
-      - AUTHSERVER=http://auth:8089/common
+      - AUTHSERVER=https://auth/common
       - AUDIENCE=MY_AUDIENCE
       - CLIENT_ID=MY_ID
       - CLIENT_SECRET=MY_SECRET
       - STORAGE_URL=https://az:10000/devstoreaccount1
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
+      - ./tests/ssl/auth.pem:/etc/ssl/certs/auth.pem
 
   relay:
     depends_on:
       - auth
       - az
     environment:
+      - AUTHSERVER=https://auth/common
+      - AUDIENCE=MY_AUDIENCE
       - STORAGE_URL=https://az:10000/devstoreaccount1
     volumes:
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
+      - ./tests/ssl/auth.pem:/etc/ssl/certs/auth.pem
 
   test:
     build:
@@ -54,5 +63,9 @@ services:
     environment:
       - AUDIENCE=MY_AUDIENCE
       - API_ADDR=http://api:8080
-      - AUTHSERVER=http://auth:8089/common
-      - STORAGE_URL=https://az:10000/devstoreaccount1
+      - AUTHSERVER=https://auth/common
+      - AZURE_STORAGE_URL=https://az:10000/devstoreaccount1
+    volumes:
+      - ./tests/ssl/auth.pem:/etc/ssl/certs/auth.pem
+      - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
+

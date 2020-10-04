@@ -17,5 +17,7 @@ COPY /tests/requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY /tests/ssl/az.pem  /etc/ssl/certs/
-ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/az.pem
+COPY /tests/ssl/auth.pem  /etc/ssl/certs/
+RUN c_rehash /etc/ssl/certs
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs
 ENTRYPOINT ["pytest","-v","integration_tests.py"]

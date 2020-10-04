@@ -35,6 +35,7 @@ def fetch_token(client_id, auth_server, scopes, cache_dir):
         client_id,
         authority=auth_server,
         token_cache=cache,
+        validate_authority=False,
     )
 
     flow = app.initiate_device_flow(scopes)

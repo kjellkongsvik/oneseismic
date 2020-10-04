@@ -13,11 +13,13 @@ from azure.storage.blob import BlobServiceClient
 from oneseismic import scan
 from oneseismic import upload
 from oneseismic import client
+from oneseismic import login
 
 API_ADDR = os.getenv("API_ADDR", "http://localhost:8080")
 AUTHSERVER = os.getenv("AUTHSERVER", "http://localhost:8089")
 AUDIENCE = os.getenv("AUDIENCE")
 STORAGE_URL = os.getenv("STORAGE_URL")
+SCOPE = os.getenv("SCOPE")
 
 
 class CustomTokenCredential(object):
@@ -79,6 +81,13 @@ def upload_cube(data):
         upload.upload(params, meta, f, blob_service_client)
 
     return meta["guid"]
+
+
+@pytest.fixture(scope="session")
+def cl():
+    cache_dir = tempfile.mkdtemp()
+    login.login(AUDIENCE, AUTHSERVER, SCOPE, cache_dir)
+    return cache_dir
 
 
 @pytest.fixture(scope="session")
