@@ -48,8 +48,8 @@ class client_auth:
         return self.auth
 
 
-AUTH_HEADER = auth_header()
-AUTH_CLIENT = client_auth(auth_header())
+# AUTH_HEADER = auth_header()
+# AUTH_CLIENT = client_auth(auth_header())
 
 
 def upload_cube(data):
@@ -106,6 +106,10 @@ def test_cube_404(cube):
     with pytest.raises(RuntimeError) as e:
         c.cube("not_found").slice(0, 1)
     assert "Request timed out" in str(e.value)
+
+
+def test_pass(cl):
+    pass
 
 
 def test_slices():
