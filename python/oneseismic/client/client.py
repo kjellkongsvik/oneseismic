@@ -83,8 +83,8 @@ class cube:
             if r.status_code == 200:
                 return assemble_slice(r.content)
 
-            if r.status_code == 500:
-                time.sleep(10)
+            if r.status_code != 200:
+                time.sleep(1)
                 continue
 
         raise RuntimeError('Request timed out; unable to fetch result')

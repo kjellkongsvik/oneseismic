@@ -162,6 +162,7 @@ func (az *azstorage) download(
 }
 
 func (r *Result) Get(ctx *gin.Context) {
+	// time.Sleep(1000 * time.Millisecond)
 	pid := ctx.Param("pid")
 	if len(pid) == 0 {
 		log.Printf("pid empty")
