@@ -70,6 +70,7 @@ class cube:
 
         result = header['result']
         resource = f'{result}'
+        time.sleep(1)
         # Super hacky retries - the result is probably not ready right away,
         # so give it a few tries before actually giving up. Currently the
         # server returns 500 also when it cannot find partial results, so
@@ -84,7 +85,7 @@ class cube:
                 return assemble_slice(r.content)
 
             if r.status_code == 500:
-                time.sleep(10)
+                time.sleep(1)
                 continue
 
         raise RuntimeError('Request timed out; unable to fetch result')
