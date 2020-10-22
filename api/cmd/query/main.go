@@ -31,32 +31,32 @@ func parseopts() (opts, error) {
 
 	opts := opts {}
 	params := []option {
-		option {
+		{
 			param: &opts.authserver,
 			flag: "authserver",
 			help: "OpenID Connect discovery server",
 		},
-		option {
+		{
 			param: &opts.audience,
 			flag: "audience",
 			help: "Audience",
 		},
-		option {
+		{
 			param: &opts.clientID,
 			flag: "client-id",
 			help: "Client ID",
 		},
-		option {
+		{
 			param: &opts.clientSecret,
 			flag: "client-secret",
 			help: "Client Secret",
 		},
-		option {
+		{
 			param: &opts.storageURL,
 			flag: "storage-url",
 			help: "Storage URL",
 		},
-		option {
+		{
 			param: &opts.bind,
 			flag: "bind",
 			help: "Bind URL e.g. tcp://*:port",

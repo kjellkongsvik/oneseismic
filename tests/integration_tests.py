@@ -36,7 +36,7 @@ def auth_header():
         allow_redirects=False,
     )
     token = parse_qs(urlparse(r.headers["location"]).fragment)["access_token"]
-
+    print("YYYYYYYY", token)
     return {"Authorization": f"Bearer {token[0]}"}
 
 
@@ -48,8 +48,8 @@ class client_auth:
         return self.auth
 
 
-# AUTH_HEADER = auth_header()
-# AUTH_CLIENT = client_auth(auth_header())
+AUTH_HEADER = auth_header()
+AUTH_CLIENT = client_auth(auth_header())
 
 
 def upload_cube(data):
@@ -101,6 +101,7 @@ def cube():
     return upload_cube(data)
 
 
+@pytest.mark.skip()
 def test_cube_404(cube):
     c = client.client(API_ADDR, AUTH_CLIENT)
     with pytest.raises(RuntimeError) as e:
@@ -109,19 +110,26 @@ def test_cube_404(cube):
 
 
 def test_pass(cl):
-    pass
+    for l in os.listdir(cl):
+        ll = os.path.join(cl, l)
+        print(ll)
+        with open(ll) as f:
+            print(f.read())
+        print(ll)
+    print("ZZZZZZZZZZZZZZZZZ", AUTH_HEADER)
 
 
-def test_slices():
+def test_slices(cl):
     w, h, d = 100, 100, 100
     data = np.ndarray(shape=(w, h, d), dtype=np.float32)
     for i in range(w):
         for j in range(h):
             for k in range(d):
                 data[i, j, k] = (i * 1) + (j * 1000) + (k * 1000000)
-
+    
     guid = upload_cube(data)
 
+#    c = client.client(API_ADDR, AUTH_DIR=cl)
     c = client.client(API_ADDR, AUTH_CLIENT)
     cube = c.cube(guid)
 

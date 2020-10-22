@@ -64,8 +64,8 @@ services:
       - AUDIENCE=MY_AUDIENCE
       - API_ADDR=http://api:8080
       - AUTHSERVER=https://auth/common
-      - AZURE_STORAGE_URL=https://az:10000/devstoreaccount1
+      - STORAGE_URL=https://az:10000/devstoreaccount1
     volumes:
-      - ./tests/ssl/auth.pem:/etc/ssl/certs/auth.pem
       - ./tests/ssl/az.pem:/etc/ssl/certs/az.pem
+      - ./tests/ssl/auth.pem:/etc/ssl/certs/auth.pem
 

@@ -15,7 +15,7 @@ def store_config(client_id, auth_server, scopes, cache_dir):
     config = {
         "client_id": client_id,
         "auth_server": auth_server,
-        "scopes": scopes
+        "scopes": scopes,
     }
 
     json.dump(config, open(config_file, 'w'))
